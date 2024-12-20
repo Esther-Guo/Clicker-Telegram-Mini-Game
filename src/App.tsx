@@ -59,7 +59,12 @@ const App: React.FC = () => {
     first_name: string;
     username?: string;
     photo_url?: string;
-  } | null>(null);
+  } | null>({
+    id: 0,
+    first_name: 'test user',
+    username: 'test-user',
+    photo_url: ''
+  });
 
   const calculateTimeLeft = (targetHour: number) => {
     const now = new Date();
@@ -94,45 +99,38 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Initialize Telegram WebApp
     const tg = window.Telegram.WebApp;
     tg.ready();
     
-    // Get user data
+    const telegramUserData = tg.initDataUnsafe?.user;
     const initData = tg.initData;
-    
-    // Validate user on your backend
-    fetch('/api/auth', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ initData })
-    })
-    .then(res => res.json())
-    .then(userData => {
-      setUser(userData);
-      setPoints(userData.points);
-      setLevelIndex(userData.level);
-    });
-  }, []);
 
-  useEffect(() => {
-    // Get Telegram WebApp instance
-    const tg = window.Telegram.WebApp;
-    
-    // Get user info
-    const user = tg.initDataUnsafe?.user;
-    if (user) {
-      setTelegramUser(user);
-      console.log('Telegram user:', user);
-      // user contains: 
-      // - id: number
-      // - first_name: string
-      // - last_name?: string
-      // - username?: string
-      // - language_code?: string
-      // - photo_url?: string
+    if (telegramUserData) {
+      // Update Telegram display data immediately
+      setTelegramUser({
+        id: telegramUserData.id,
+        first_name: telegramUserData.first_name,
+        username: telegramUserData.username,
+        photo_url: telegramUserData.photo_url
+      });
+
+      // Fetch game data separately
+      fetch('/api/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ initData })
+      })
+      .then(res => res.json())
+      .then(userData => {
+        setUser(userData);
+        setPoints(userData.points);
+        setLevelIndex(userData.level);
+      })
+      .catch(err => {
+        console.error('Error fetching user data:', err);
+      });
     }
   }, []);
 
