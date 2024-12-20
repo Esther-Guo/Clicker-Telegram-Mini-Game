@@ -8,6 +8,14 @@ import Mine from './icons/Mine';
 import Friends from './icons/Friends';
 import Coins from './icons/Coins';
 
+declare global {
+  interface Window {
+    Telegram: {
+      WebApp: any;
+    }
+  }
+}
+
 const App: React.FC = () => {
   const levelNames = [
     "Bronze",    // From 0 to 4999 coins
@@ -45,6 +53,14 @@ const App: React.FC = () => {
   const [dailyCipherTimeLeft, setDailyCipherTimeLeft] = useState("");
   const [dailyComboTimeLeft, setDailyComboTimeLeft] = useState("");
 
+  const [user, setUser] = useState<any>(null);
+  const [telegramUser, setTelegramUser] = useState<{
+    id: number;
+    first_name: string;
+    username?: string;
+    photo_url?: string;
+  } | null>(null);
+
   const calculateTimeLeft = (targetHour: number) => {
     const now = new Date();
     const target = new Date(now);
@@ -77,7 +93,50 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  useEffect(() => {
+    // Initialize Telegram WebApp
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    
+    // Get user data
+    const initData = tg.initData;
+    
+    // Validate user on your backend
+    fetch('/api/auth', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ initData })
+    })
+    .then(res => res.json())
+    .then(userData => {
+      setUser(userData);
+      setPoints(userData.points);
+      setLevelIndex(userData.level);
+    });
+  }, []);
+
+  useEffect(() => {
+    // Get Telegram WebApp instance
+    const tg = window.Telegram.WebApp;
+    
+    // Get user info
+    const user = tg.initDataUnsafe?.user;
+    if (user) {
+      setTelegramUser(user);
+      console.log('Telegram user:', user);
+      // user contains: 
+      // - id: number
+      // - first_name: string
+      // - last_name?: string
+      // - username?: string
+      // - language_code?: string
+      // - photo_url?: string
+    }
+  }, []);
+
+  const handleCardClick = async (e: React.MouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
@@ -87,7 +146,21 @@ const App: React.FC = () => {
       card.style.transform = '';
     }, 100);
 
-    setPoints(points + pointsToAdd);
+    const newPoints = points + pointsToAdd;
+    setPoints(newPoints);
+    
+    // Save to backend
+    await fetch('/api/updatePoints', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        telegramId: user.telegramId, 
+        points: newPoints 
+      })
+    });
+
     setClicks([...clicks, { id: Date.now(), x: e.pageX, y: e.pageY }]);
   };
 
@@ -136,10 +209,21 @@ const App: React.FC = () => {
         <div className="px-4 z-10">
           <div className="flex items-center space-x-2 pt-4">
             <div className="p-1 rounded-lg bg-[#1d2025]">
-              <Hamster size={24} className="text-[#d4d4d4]" />
+              {telegramUser?.photo_url ? (
+                <img 
+                  src={telegramUser.photo_url} 
+                  alt="Profile" 
+                  className="w-6 h-6 rounded-full"
+                />
+              ) : (
+                <Hamster size={24} className="text-[#d4d4d4]" />
+              )}
             </div>
             <div>
-              <p className="text-sm">Nikandr (CEO)</p>
+              <p className="text-sm">
+                {telegramUser?.first_name || 'Loading...'}
+                {telegramUser?.username && ` (@${telegramUser.username})`}
+              </p>
             </div>
           </div>
           <div className="flex items-center justify-between space-x-4 mt-1">
