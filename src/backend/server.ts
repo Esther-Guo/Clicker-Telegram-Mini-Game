@@ -1,20 +1,14 @@
 import express from 'express';
-import { validateTelegramWebAppData } from './auth';
-import mongoose from 'mongoose';
+import cors from 'cors';
 import apiRoutes from './routes/api';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const app = express();
+const port = 3000; // or any port you prefer
 
-// Add body parser middleware
-app.use(express.json());
+app.use(cors()); // Enable CORS for all routes
+app.use(express.json()); // Parse JSON bodies
+app.use('/api', apiRoutes);
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || '');
-
-// Use the API routes
-app.use('/api', validateTelegramWebAppData, apiRoutes);
-
-export default app;
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});

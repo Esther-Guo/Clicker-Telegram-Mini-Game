@@ -1,37 +1,37 @@
 {
-  "name": "hamster-kombat-telegram-mini-app-clone",
-  "private": true,
-  "version": "0.0.0",
+  "name": "clicker-telegram-mini-game",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "client:dev": "vite",
+    "client:build": "tsc && vite build",
+    "client:preview": "vite preview",
+    "server:dev": "tsx src/backend/server.ts",
+    "server:build": "tsc -p tsconfig.server.json",
+    "server:start": "node dist/backend/server.js",
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "build": "npm run client:build && npm run server:build",
+    "start": "npm run server:start"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.47.10",
+    "@types/express": "^4.17.x",
+    "@types/node": "^18.x.x",
+    "cors": "^2.8.x",
     "dotenv": "^16.4.7",
-    "experss": "^0.0.1-security",
-    "express": "^4.21.2",
-    "mongodb": "^6.12.0",
-    "mongoose": "^8.9.2",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "express": "^4.18.x",
+    "react": "^18.x.x",
+    "react-dom": "^18.x.x",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.x.x"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@typescript-eslint/eslint-plugin": "^7.13.1",
-    "@typescript-eslint/parser": "^7.13.1",
-    "@vitejs/plugin-react": "^4.3.1",
-    "autoprefixer": "^10.4.19",
-    "eslint": "^8.57.0",
-    "eslint-plugin-react-hooks": "^4.6.2",
-    "eslint-plugin-react-refresh": "^0.4.7",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.4",
-    "typescript": "^5.2.2",
-    "vite": "^5.3.1"
+    "@types/cors": "^2.8.17",
+    "@types/react": "^18.x.x",
+    "@types/react-dom": "^18.x.x",
+    "@vitejs/plugin-react": "^4.x.x",
+    "concurrently": "^8.2.2",
+    "tsx": "^4.19.2",
+    "vite": "^4.x.x"
   }
 }

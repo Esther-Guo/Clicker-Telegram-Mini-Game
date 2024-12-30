@@ -7,6 +7,7 @@ import Settings from './icons/Settings';
 import Mine from './icons/Mine';
 import Friends from './icons/Friends';
 import Coins from './icons/Coins';
+import type User from './backend/models/User';
 
 declare global {
   interface Window {
@@ -53,7 +54,8 @@ const App: React.FC = () => {
   const [dailyCipherTimeLeft, setDailyCipherTimeLeft] = useState("");
   const [dailyComboTimeLeft, setDailyComboTimeLeft] = useState("");
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [telegramUser, setTelegramUser] = useState<{
     id: number;
     first_name: string;
@@ -102,10 +104,21 @@ const App: React.FC = () => {
     const tg = window.Telegram.WebApp;
     tg.ready();
     
-    const telegramUserData = tg.initDataUnsafe?.user;
-    const initData = tg.initData;
+    const mockTGUserData = {
+      id: 12345,
+      first_name: 'John',
+      username: 'john_doe',
+      photo_url: 'https://example.com/photo.jpg'
+    };
+    const telegramUserData = tg.initDataUnsafe?.user || mockTGUserData;
+    const initData = tg.initData || {
+      user: mockTGUserData
+    };
 
-    if (telegramUserData) {
+    if (mockTGUserData) {
+      // Add timestamp logging
+      console.log('Attempting auth call at:', new Date().toISOString());
+      
       // Update Telegram display data immediately
       setTelegramUser({
         id: telegramUserData.id,
@@ -114,7 +127,7 @@ const App: React.FC = () => {
         photo_url: telegramUserData.photo_url
       });
 
-      // Fetch game data separately
+      // Fetch or create user data
       fetch('/api/auth', {
         method: 'POST',
         headers: {
@@ -122,15 +135,25 @@ const App: React.FC = () => {
         },
         body: JSON.stringify({ initData })
       })
-      .then(res => res.json())
+      .then(res => {
+        console.log('Auth response received at:', new Date().toISOString());
+        console.log('Auth response:', res);
+        return res.json();
+      })
       .then(userData => {
+        console.log('Auth data processed:', userData);
         setUser(userData);
         setPoints(userData.points);
         setLevelIndex(userData.level);
       })
       .catch(err => {
-        console.error('Error fetching user data:', err);
+        console.error('Auth error at:', new Date().toISOString(), err);
+      })
+      .finally(() => {
+        setLoading(false);
       });
+    } else {
+      setLoading(false);
     }
   }, []);
 
@@ -148,16 +171,16 @@ const App: React.FC = () => {
     setPoints(newPoints);
     
     // Save to backend
-    await fetch('/api/updatePoints', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        telegramId: user.telegramId, 
-        points: newPoints 
-      })
-    });
+    // await fetch('/api/updatePoints', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({ 
+    //     telegramId: user.telegramId, 
+    //     points: newPoints 
+    //   })
+    // });
 
     setClicks([...clicks, { id: Date.now(), x: e.pageX, y: e.pageY }]);
   };
@@ -200,6 +223,10 @@ const App: React.FC = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, [profitPerHour]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="bg-black flex justify-center">

@@ -1,33 +1,28 @@
 import express from 'express';
-import { User } from '../models/User';
+import { initializeUser, updateUserPoints } from '../../lib/supabase';
 
 const apiRoutes = express.Router();
 
 apiRoutes.post('/auth', async (req, res) => {
-  const { user } = req.body.initData;
-  
-  let dbUser = await User.findOne({ telegramId: user.id });
-  if (!dbUser) {
-    dbUser = await User.create({
-      telegramId: user.id,
-      username: user.username,
-      points: 0,
-      level: 0
-    });
+  try {
+    const { user } = req.body.initData;
+    const dbUser = await initializeUser(user.id.toString());
+    res.json(dbUser);
+  } catch (error) {
+    console.error('Error in /auth:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-  
-  res.json(dbUser);
 });
 
 apiRoutes.post('/updatePoints', async (req, res) => {
-  const { telegramId, points } = req.body;
-  
-  await User.findOneAndUpdate(
-    { telegramId },
-    { points }
-  );
-  
-  res.json({ success: true });
+  try {
+    const { telegramId, points } = req.body;
+    const updatedUser = await updateUserPoints(telegramId.toString(), points);
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Error in /updatePoints:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 export default apiRoutes;

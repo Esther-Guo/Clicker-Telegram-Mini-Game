@@ -1,32 +1,67 @@
-import mongoose from 'mongoose';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-import dotenv from 'dotenv'; // Load environment variables
 dotenv.config();
-const uri = process.env.MONGODB_URI;
 
-console.log(uri)
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY
+);
 
-
-async function verifyConnection() {
+async function testConnection() {
     try {
-        // Connect to MongoDB cluster
-        await mongoose.connect(uri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
-        console.log("Successfully connected to MongoDB Atlas!");
+        // Test the connection
+        const { data: { user } } = await supabase.auth.getUser();
+        console.log("Successfully connected to Supabase!");
 
-        // Optionally list the databases in the cluster
-        const admin = mongoose.connection.db.admin();
-        const databases = await admin.listDatabases();
-        console.log("Databases in the cluster:");
-        databases.databases.forEach(db => console.log(`- ${db.name}`));
+        // Create a test table if it doesn't exist
+        // Note: This needs to be done in Supabase's SQL editor
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .limit(1);
+
+        if (error) throw error;
+        console.log("Successfully queried users table!");
+        console.log("First user (if any):", data);
+
     } catch (error) {
-        console.error("Error connecting to MongoDB Atlas:", error.message);
-    } finally {
-        // Close the connection
-        mongoose.connection.close();
+        console.error("Connection error:", error.message);
     }
 }
 
-verifyConnection();
+// Test basic CRUD operations
+async function testCRUD() {
+    try {
+        // Create
+        const { data: insertedUser, error: insertError } = await supabase
+            .from('users')
+            .insert([
+                {
+                    telegram_id: '12345',
+                    points: 1000,
+                    level: 1,
+                }
+            ])
+            .select();
+
+        if (insertError) throw insertError;
+        console.log("Created user:", insertedUser);
+
+        // Read
+        const { data: users, error: readError } = await supabase
+            .from('users')
+            .select('*');
+
+        if (readError) throw readError;
+        console.log("All users:", users);
+
+    } catch (error) {
+        console.error("CRUD error:", error.message);
+    }
+}
+
+testConnection();
+testCRUD();
+  
+  
