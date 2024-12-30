@@ -8,6 +8,7 @@ import Mine from './icons/Mine';
 import Friends from './icons/Friends';
 import Coins from './icons/Coins';
 import type User from './backend/models/User';
+import { initializeUser } from './lib/supabase';
 
 declare global {
   interface Window {
@@ -111,13 +112,9 @@ const App: React.FC = () => {
       photo_url: 'https://example.com/photo.jpg'
     };
     const telegramUserData = tg.initDataUnsafe?.user || mockTGUserData;
-    const initData = tg.initData || {
-      user: mockTGUserData
-    };
 
-    if (mockTGUserData) {
-      // Add timestamp logging
-      console.log('Attempting auth call at:', new Date().toISOString());
+    if (telegramUserData) {
+      console.log('Attempting auth at:', new Date().toISOString());
       
       // Update Telegram display data immediately
       setTelegramUser({
@@ -127,31 +124,20 @@ const App: React.FC = () => {
         photo_url: telegramUserData.photo_url
       });
 
-      // Fetch or create user data
-      fetch('/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ initData })
-      })
-      .then(res => {
-        console.log('Auth response received at:', new Date().toISOString());
-        console.log('Auth response:', res);
-        return res.json();
-      })
-      .then(userData => {
-        console.log('Auth data processed:', userData);
-        setUser(userData);
-        setPoints(userData.points);
-        setLevelIndex(userData.level);
-      })
-      .catch(err => {
-        console.error('Auth error at:', new Date().toISOString(), err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      // Direct Supabase call instead of API call
+      initializeUser(telegramUserData.id.toString())
+        .then(userData => {
+          console.log('Auth data processed:', userData);
+          setUser(userData);
+          setPoints(userData.points);
+          setLevelIndex(userData.level);
+        })
+        .catch(err => {
+          console.error('Auth error at:', new Date().toISOString(), err);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     } else {
       setLoading(false);
     }
