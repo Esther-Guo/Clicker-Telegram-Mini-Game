@@ -9,6 +9,5 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/server", "src/shared"],
-  "exclude": ["src/client"]
+  "include": ["src/backend", "src/lib"],
 } 
