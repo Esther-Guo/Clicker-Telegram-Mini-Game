@@ -11,7 +11,8 @@
     "server:start": "node dist/backend/server.js",
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
     "build": "npm run client:build && npm run server:build",
-    "start": "npm run server:start"
+    "start": "npm run server:start",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.47.10",
