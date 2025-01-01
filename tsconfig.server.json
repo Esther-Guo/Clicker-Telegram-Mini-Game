@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/backend", "src/lib"],
+  "include": ["src/models", "src/lib"],
 } 

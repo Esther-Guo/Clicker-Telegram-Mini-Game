@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './App.css';
 import Hamster from './icons/Hamster';
 import { binanceLogo, dailyCipher, dailyCombo, dailyReward, dollarCoin, hamsterCoin, mainCharacter } from './images';
@@ -7,8 +7,8 @@ import Settings from './icons/Settings';
 import Mine from './icons/Mine';
 import Friends from './icons/Friends';
 import Coins from './icons/Coins';
-import type User from './backend/models/User';
-import { initializeUser } from './lib/supabase';
+import type User from './models/User';
+import { initializeUser, updateUserPoints } from './lib/supabase';
 
 declare global {
   interface Window {
@@ -141,6 +141,7 @@ const App: React.FC = () => {
     } else {
       setLoading(false);
     }
+
   }, []);
 
   const handleCardClick = async (e: React.MouseEvent<HTMLDivElement>) => {
@@ -155,18 +156,6 @@ const App: React.FC = () => {
 
     const newPoints = points + pointsToAdd;
     setPoints(newPoints);
-    
-    // Save to backend
-    // await fetch('/api/updatePoints', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({ 
-    //     telegramId: user.telegramId, 
-    //     points: newPoints 
-    //   })
-    // });
 
     setClicks([...clicks, { id: Date.now(), x: e.pageX, y: e.pageY }]);
   };
@@ -202,6 +191,37 @@ const App: React.FC = () => {
     return `+${profit}`;
   };
 
+  const savePointsToDatabase = async (points: number) => {
+    try {
+      console.log('savePointsToDatabase called with points:', points); // Debug log
+      if (user?.telegram_id) {
+        await updateUserPoints(user.telegram_id.toString(), points);
+        console.log('Points saved successfully:', points); // Debug log
+      } else {
+        console.log('No user.telegram_id found'); // Debug log
+      }
+    } catch (error) {
+      console.error('Failed to save points:', error);
+    }
+  };
+
+// const throttledSave =  throttle((points: number) => {
+//     console.log('throttledSave executing with points:', points);
+//     savePointsToDatabase(points);
+//   }, 5000); // Will save at most once every 5 seconds
+
+
+//   // Effect for saving points when they change
+//   useEffect(() => {
+//     console.log('Points changed to:', points);
+//     throttledSave(points);
+//     return () => {
+//       console.log('Cleanup - cancelling throttledSave'); // Debug log
+//       throttledSave.cancel();
+//     };
+//   }, [points, throttledSave]);
+  
+  // Separate effect for points auto-increment (passive income)
   useEffect(() => {
     const pointsPerSecond = Math.floor(profitPerHour / 3600);
     const interval = setInterval(() => {
@@ -210,6 +230,38 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [profitPerHour]);
 
+  // Memoize handlers outside of useEffect
+  const handleVisibilityChange = React.useCallback(() => {
+    if (document.hidden) {
+      savePointsToDatabase(points);
+    }
+  }, [points]);
+
+  const handleClose = React.useCallback(() => {
+    savePointsToDatabase(points);
+  }, [points]);
+
+  const handleBeforeUnload = React.useCallback((e: BeforeUnloadEvent) => {
+    savePointsToDatabase(points);
+    e.preventDefault();
+  }, [points]);
+
+  // Use the memoized handlers in useEffect
+  useEffect(() => {
+    const tg = window.Telegram.WebApp;
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    tg.onEvent('viewportChanged', handleClose);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      tg.offEvent('viewportChanged', handleClose);
+    };
+  }, [handleVisibilityChange, handleBeforeUnload, handleClose]); // Dependencies are now the memoized handlers
+
+  
   if (loading) {
     return <div>Loading...</div>;
   }
