@@ -45,11 +45,11 @@ const App: React.FC = () => {
     1000000000// Lord
   ];
 
-  const [levelIndex, setLevelIndex] = useState(6);
-  const [points, setPoints] = useState(22749365);
+  const [levelIndex, setLevelIndex] = useState(0);
+  const [points, setPoints] = useState(0);
   const [clicks, setClicks] = useState<{ id: number, x: number, y: number }[]>([]);
   const pointsToAdd = 11;
-  const profitPerHour = 126420;
+  const profitPerHour = 18000;
 
   const [dailyRewardTimeLeft, setDailyRewardTimeLeft] = useState("");
   const [dailyCipherTimeLeft, setDailyCipherTimeLeft] = useState("");
@@ -356,7 +356,7 @@ const App: React.FC = () => {
                 onClick={handleCardClick}
               >
                 <div className="w-full h-full rounded-full circle-inner">
-                  <img src={mainCharacter} alt="Main Character" className="w-full h-full" />
+                  <img src={mainCharacter} alt="Main Character" className="w-2/3 h-2/3" />
                 </div>
               </div>
             </div>
