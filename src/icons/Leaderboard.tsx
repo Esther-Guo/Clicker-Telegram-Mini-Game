@@ -1,7 +1,7 @@
 import { IconProps } from "../utils/types";
 
 
-const Friends: React.FC<IconProps> = ({ size = 24, className = "" }) => {
+const Leaderboard: React.FC<IconProps> = ({ size = 24, className = "" }) => {
 
     const svgSize = `${size}px`;
 
@@ -10,4 +10,4 @@ const Friends: React.FC<IconProps> = ({ size = 24, className = "" }) => {
     );
 };
 
-export default Friends;
+export default Leaderboard;

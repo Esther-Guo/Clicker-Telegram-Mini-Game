@@ -4,9 +4,9 @@ import Hamster from './icons/Hamster';
 import { binanceLogo, dailyCipher, dailyCombo, dailyReward, dollarCoin, hamsterCoin, mainCharacter } from './images';
 import Info from './icons/Info';
 import Settings from './icons/Settings';
-import Mine from './icons/Mine';
-import Friends from './icons/Friends';
-import Coins from './icons/Coins';
+import Menu from './components/Menu';
+import Leaderboard from './components/Leaderboard';
+import Exchange from './components/Exchange';
 import type User from './models/User';
 import { initializeUser, updateUserPoints } from './lib/supabase';
 
@@ -68,6 +68,8 @@ const App: React.FC = () => {
     username: 'test-user',
     photo_url: ''
   });
+
+  const [activeTab, setActiveTab] = useState('Exchange');
 
   const calculateTimeLeft = (targetHour: number) => {
     const now = new Date();
@@ -343,65 +345,18 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <div className="px-4 mt-4 flex justify-center">
-              <div className="px-4 py-2 flex items-center space-x-2">
-                <img src={dollarCoin} alt="Dollar Coin" className="w-10 h-10" />
-                <p className="text-4xl text-white">{points.toLocaleString()}</p>
-              </div>
-            </div>
-
-            <div className="px-4 mt-4 flex justify-center">
-              <div
-                className="w-80 h-80 p-4 rounded-full circle-outer"
-                onClick={handleCardClick}
-              >
-                <div className="w-full h-full rounded-full circle-inner">
-                  <img src={mainCharacter} alt="Main Character" className="w-2/3 h-2/3" />
-                </div>
-              </div>
+            
+            <div className="content">
+              {activeTab === 'Exchange' && <Exchange points={points} onCardClick={handleCardClick} />}
+              {activeTab === 'Mine' && <div>Mine Content</div>}
+              {activeTab === 'Leaderboard' && <Leaderboard />}
+              {activeTab === 'Earn' && <div>Earn Content</div>}
+              {activeTab === 'Airdrop' && <div>Airdrop Content</div>}
             </div>
           </div>
         </div>
+        <Menu activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
-
-      {/* Bottom fixed div */}
-      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-[calc(100%-2rem)] max-w-xl bg-[#272a2f] flex justify-around items-center z-50 rounded-3xl text-xs">
-        <div className="text-center text-[#85827d] w-1/5 bg-[#1c1f24] m-1 p-2 rounded-2xl">
-          <img src={binanceLogo} alt="Exchange" className="w-8 h-8 mx-auto" />
-          <p className="mt-1">Exchange</p>
-        </div>
-        <div className="text-center text-[#85827d] w-1/5">
-          <Mine className="w-8 h-8 mx-auto" />
-          <p className="mt-1">Mine</p>
-        </div>
-        <div className="text-center text-[#85827d] w-1/5">
-          <Friends className="w-8 h-8 mx-auto" />
-          <p className="mt-1">Friends</p>
-        </div>
-        <div className="text-center text-[#85827d] w-1/5">
-          <Coins className="w-8 h-8 mx-auto" />
-          <p className="mt-1">Earn</p>
-        </div>
-        <div className="text-center text-[#85827d] w-1/5">
-          <img src={hamsterCoin} alt="Airdrop" className="w-8 h-8 mx-auto" />
-          <p className="mt-1">Airdrop</p>
-        </div>
-      </div>
-
-      {clicks.map((click) => (
-        <div
-          key={click.id}
-          className="absolute text-5xl font-bold opacity-0 text-white pointer-events-none"
-          style={{
-            top: `${click.y - 42}px`,
-            left: `${click.x - 28}px`,
-            animation: `float 1s ease-out`
-          }}
-          onAnimationEnd={() => handleAnimationEnd(click.id)}
-        >
-          {pointsToAdd}
-        </div>
-      ))}
     </div>
   );
 };

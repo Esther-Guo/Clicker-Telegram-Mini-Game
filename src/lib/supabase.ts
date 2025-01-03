@@ -83,4 +83,14 @@ export const updateUserLevel = async (telegramId: string, level: number): Promis
   return data as User;
 };
 
+export const fetchUsers = async () => {
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, telegram_id, points, level')
+    .order('points', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
 export default supabase; 
